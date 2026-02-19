@@ -4,6 +4,9 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <cstdint>
+#include <string>
+#include <ctime>
 
 /* ***** Simplex noise visualisation example *****/
 static constexpr unsigned int WIDTH = 1270;
@@ -23,9 +26,9 @@ std::string toString(T number) {
 /* ***** WORLD ******/
 class RandomWorld {
     public:
-        explicit RandomWorld(unsigned int width, unsigned int height) : height(height), width(width) {
-            noiseTexture.create(TEXTURE_WIDTH, TEXTURE_HEIGHT);
-            pixels = std::unique_ptr< sf::Uint8[] >(new sf::Uint8[width * height * 4]);
+  explicit RandomWorld(unsigned int width, unsigned int height) : height(height), width(width) {
+    [[maybe_unused]] auto resizeResult = noiseTexture.resize(sf::Vector2u{TEXTURE_WIDTH, TEXTURE_HEIGHT});
+    pixels = std::unique_ptr< std::uint8_t[] >(new std::uint8_t[width * height * 4]);
 
             elevationNoise.randomizeSeed();
             moistureNoise.setSeed(static_cast<long unsigned int>(time(nullptr)) * 2);
@@ -33,20 +36,20 @@ class RandomWorld {
             printCurrentValues();
         };
 
-        void handleInput(sf::RenderWindow &window) {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) redistribution -= 0.1f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) redistribution += 0.1f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) frequency -= 0.1f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) frequency += 0.1f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) gain -= 0.005f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) gain += 0.005f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) octaves -= 1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) octaves += 1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) lacunarity -= 0.1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) lacunarity += 0.1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) elevationNoise.randomizeSeed();
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) moistureNoise.randomizeSeed();
-        }
+  void handleKey(sf::Keyboard::Key key) {
+    if (key == sf::Keyboard::Key::Q) redistribution -= 0.1f;
+    if (key == sf::Keyboard::Key::W) redistribution += 0.1f;
+    if (key == sf::Keyboard::Key::A) frequency -= 0.1f;
+    if (key == sf::Keyboard::Key::S) frequency += 0.1f;
+    if (key == sf::Keyboard::Key::Z) gain -= 0.005f;
+    if (key == sf::Keyboard::Key::X) gain += 0.005f;
+    if (key == sf::Keyboard::Key::D) octaves -= 1;
+    if (key == sf::Keyboard::Key::F) octaves += 1;
+    if (key == sf::Keyboard::Key::C) lacunarity -= 0.1;
+    if (key == sf::Keyboard::Key::V) lacunarity += 0.1;
+    if (key == sf::Keyboard::Key::E) elevationNoise.randomizeSeed();
+    if (key == sf::Keyboard::Key::R) moistureNoise.randomizeSeed();
+  }
 
         void printCurrentValues() {
             std::cout << "Noise Redistribution: " << toString(redistribution) << " ";
@@ -56,13 +59,12 @@ class RandomWorld {
             std::cout << "Lacunarity : " << toString(lacunarity) << std::endl;
         }
 
-        void draw(sf::RenderWindow &window) {
-            sf::Sprite sprite;
-            sprite.setTexture(noiseTexture);
-            sprite.setScale(3.f, 3.f);
+  void draw(sf::RenderWindow &window) {
+    sf::Sprite sprite(noiseTexture);
+    sprite.setScale(sf::Vector2f{3.f, 3.f});
 
-            window.draw(sprite);
-        };
+    window.draw(sprite);
+  };
 
         void create() {
             for (std::size_t y = 0; y < height; ++y) {
@@ -101,7 +103,7 @@ class RandomWorld {
         SimplexNoise elevationNoise;
         SimplexNoise moistureNoise;
         sf::Texture noiseTexture;
-        std::unique_ptr< sf::Uint8[] > pixels;
+        std::unique_ptr< std::uint8_t[] > pixels;
 
         /* Values for FBM that produce 'nice' output */
         unsigned int octaves = 7;
@@ -148,31 +150,29 @@ int main() {
     RandomWorld world(TEXTURE_WIDTH, TEXTURE_HEIGHT);
     world.create();
 
-    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Simplex Noise 2D visualisation");
-    window.setKeyRepeatEnabled(false);
+  sf::RenderWindow window(sf::VideoMode(sf::Vector2u{WIDTH, HEIGHT}), "Simplex Noise 2D visualisation");
+  window.setKeyRepeatEnabled(false);
 
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
+  while (window.isOpen()) {
+    while (const auto event = window.pollEvent()) {
+      if (event->is<sf::Event::Closed>()) {
+        window.close();
+      } else if (const auto keyEvent = event->getIf<sf::Event::KeyPressed>()) {
+        std::cout << "Updating... ";
+        sf::Clock clock;
+        clock.restart();
+        world.handleKey(keyEvent->code);
+        world.create();
 
-            } else if (event.type == sf::Event::KeyPressed) {
-                std::cout << "Updating... ";
-                sf::Clock clock;
-                clock.restart();
-                world.handleInput(window);
-                world.create();
-
-                std::cout << "time taken: " + toString(clock.getElapsedTime().asMilliseconds()) << " ms" << std::endl;
-                world.printCurrentValues();
-            }
-        }
-
-        window.clear(sf::Color::Black);
-        world.draw(window);
-        window.display();
+        std::cout << "time taken: " + toString(clock.getElapsedTime().asMilliseconds()) << " ms" << std::endl;
+        world.printCurrentValues();
+      }
     }
+
+    window.clear(sf::Color::Black);
+    world.draw(window);
+    window.display();
+  }
 
     return EXIT_SUCCESS;
 }

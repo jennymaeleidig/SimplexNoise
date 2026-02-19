@@ -98,6 +98,7 @@ Example usage
 
 ## Examples
 [Random world](./examples/README.md) playground visualised using [SFML](https://www.sfml-dev.org/) library.
+    - Ensure that you have SFML library installed and linked to your project to run the example.
 
 ## Additional articles 
 * Octaves (Fractal) algorithm   : http://flafla2.github.io/2014/08/09/perlinnoise.html

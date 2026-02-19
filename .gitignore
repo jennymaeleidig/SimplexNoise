@@ -1,0 +1,65 @@
+# Build directories
+/build/
+/cmake-build-*/
+
+# CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+Makefile
+*.ninja
+build.ninja
+.ninja_deps
+.ninja_log
+
+# Compiled objects, libraries, executables
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+SimplexNoise
+
+# Coverage / profiling / test output
+*.gcno
+*.gcda
+*.prof
+*.profdata
+coverage/
+lcov.info
+
+# IDEs, editors and workspace files
+.vscode/
+*.code-workspace
+.idea/
+*.sublime-*
+*.swp
+*~
+*.swo
+*.bak
+
+# macOS
+.DS_Store
+*.dSYM
+
+# Caches and temp
+.cache/
+.ccache/
+*.tmp
+*.temp
+
+# Logs and miscellaneous
+*.log
+*.log.*
+core
+*.zip
+*.tar.gz
